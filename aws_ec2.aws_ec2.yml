@@ -1,0 +1,65 @@
+# This is the inventory file for Ansible to manage AWS EC2 instances using SSM.
+# It uses the `amazon.aws.aws_ec2` plugin to dynamically fetch instances based on specific filters.
+# Ensure you have the `amazon.aws` collection installed in your Ansible environment.
+
+
+#######################
+
+plugin: amazon.aws.aws_ec2
+regions:
+  - us-east-1
+
+filters:
+  instance-state-name: running
+  tag:SSMManaged: "true"
+  tag:Name: "frontend-dev-asg-ec2"
+
+hostnames:
+  - instance-id
+
+compose:
+  ansible_host: instance_id
+  ansible_connection: "'amazon.aws.aws_ssm'"
+  ansible_aws_ssm_bucket_name: "'ansible-ssm-bucket-omokaro'"
+  ansible_aws_ssm_region_name: "'us-east-1'"
+
+plugin_options:
+  aws_ssm:
+    use_s3_bucket: true
+    s3_bucket_name: ansible-ssm-bucket-omokaro
+
+strict: False
+
+keyed_groups:
+  - key: tags["Name"]
+    prefix: env
+    separator: "_"
+
+
+###############################
+
+
+
+
+# Don't try to access 'tags' directly as a variable
+
+
+# ✅ On Your Control Machine (Your Laptop or Jump Box)
+# Install the session-manager-plugin (once):
+
+# bash
+# Copy
+# Edit
+
+# this should be installed on the machine running ansible
+# curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb" -o session-manager-plugin.deb
+# sudo dpkg -i session-manager-plugin.deb
+
+#use this to check it
+# session-manager-plugin
+
+
+
+
+# This makes the ansible SSM connection plugin work.
+

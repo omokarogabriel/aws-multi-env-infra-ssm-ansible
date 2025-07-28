@@ -1,0 +1,11 @@
+# debug_ssm.yml
+- hosts: all
+  gather_facts: no
+  tasks:
+    - name: Show inventory hostname
+      debug:
+        var: inventory_hostname
+
+    - name: Show Ansible connection
+      debug:
+        var: ansible_connection

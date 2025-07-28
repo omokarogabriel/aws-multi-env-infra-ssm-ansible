@@ -1,0 +1,49 @@
+
+# File: playbook.yml
+- name: Configure EC2 via AWS SSM
+  hosts: env_frontend_dev_asg_ec2
+  connection: amazon.aws.aws_ssm
+  gather_facts: yes
+
+  tasks:
+    - name: Install Nginx
+      become: true
+      apt:
+        name: nginx
+        state: present
+        update_cache: yes
+
+    - name: Ensure Nginx is running
+      become: true
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+
+    - name: Install Git
+      become: true
+      apt:
+        name: git
+        state: present
+        update_cache: yes
+
+    - name: Ensure target directory is clean
+      become: true
+      file:
+        path: /var/www/html
+        state: absent
+
+    - name: Recreate directory
+      become: true
+      file:
+        path: /var/www/html
+        state: directory
+        mode: '0755'
+
+    - name: Clone Git repository
+      become: true
+      git:
+        repo: 'https://github.com/omokarogabriel/portfolio.git'
+        dest: /var/www/html
+        version: main
+        force: yes

@@ -1,0 +1,15 @@
+
+# File: ping_playbook.yml
+# This playbook pings all SSM-managed instances using the Amazon AWS SSM connection plugin.
+# It requires the `amazon.aws` collection to be installed.
+# Ensure you have the necessary permissions and that the instances are configured for SSM.
+
+- name: Ping all SSM-managed instances
+  hosts: all
+  gather_facts: false
+  connection: amazon.aws.aws_ssm
+  vars:
+    ansible_aws_ssm_use_s3_bucket: false
+  tasks:
+    - name: Ping EC2 instance
+      ansible.builtin.ping:
