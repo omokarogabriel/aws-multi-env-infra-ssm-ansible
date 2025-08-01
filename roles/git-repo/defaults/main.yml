@@ -1,0 +1,15 @@
+---
+# defaults file for git-repo
+
+# defaults file for git-repo
+
+# github_repo: "git@github.com:omokarogabriel/my-port-folio.git"
+# secret_name: "my-github_ssh_private_keys6"
+# secret_region: "us-east-1"
+# clone_dest: "/var/www/html/my-port-folio"
+# # github_repo: "https://github.com/omokarogabriel/my-port-folio.git"
+
+github_repo: "git@github.com:omokarogabriel/my-port-folio.git"
+clone_dest: "/var/www/html/my-port-folio"
+secret_name: "my-github_ssh_private_keys6"
+secret_region: "us-east-1"

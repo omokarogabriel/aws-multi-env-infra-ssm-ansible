@@ -1,0 +1,303 @@
+
+
+
+# ---
+# # tasks file for git-repo
+
+# - name: Ensure git is installed
+#   ansible.builtin.package:
+#     name: git
+#     state: present
+#   become: true
+
+# - name: Ensure .ssh directory exists
+#   ansible.builtin.file:
+#     path: /home/ubuntu/.ssh
+#     state: directory
+#     mode: '0700'
+#     owner: ubuntu
+#     group: ubuntu
+#   become: true
+
+# - name: Install AWS CLI
+#   ansible.builtin.package:
+#     name: awscli
+#     state: present
+#   become: true
+
+# # - name: Fetch SSH private key from AWS Secrets Manager and copy to file
+# #   ansible.builtin.shell: |
+# #     aws secretsmanager get-secret-value \
+# #       --secret-id "{{ secret_name }}" \
+# #       --region "{{ secret_region }}" \
+# #       --query SecretString \
+# #       --output text > /home/ubuntu/.ssh/github_private_key
+# #   register: secret_output
+# #   no_log: true
+# #   become: true
+
+# - name: Fetch SSH private key from AWS Secrets Manager and write to file
+#   ansible.builtin.shell: |
+#     aws secretsmanager get-secret-value \
+#       --secret-id "{{ secret_name }}" \
+#       --region "{{ secret_region }}" \
+#       --query SecretString \
+#       --output text > /home/ubuntu/.ssh/github_private_key && \
+#     chown ubuntu:ubuntu /home/ubuntu/.ssh/github_private_key && \
+#     chmod 600 /home/ubuntu/.ssh/github_private_key
+#   register: secret_output
+#   no_log: true
+#   become: true
+
+
+# - name: Set correct permissions on SSH key
+#   ansible.builtin.file:
+#     path: /home/ubuntu/.ssh/github_private_key
+#     mode: '0600'
+#     owner: ubuntu
+#     group: ubuntu
+#   become: true
+
+
+# # - name: Verify SSH key format
+# #   ansible.builtin.command: ssh-keygen -y -f /home/ubuntu/.ssh/github_private_key
+# #   register: key_test
+# #   become: true
+# #   become_user: ubuntu
+# #   changed_when: false
+# #   failed_when: key_test.rc != 0
+
+# # - name: Debug successful key validation
+# #   debug:
+# #     msg: "✅ SSH key validation successful!"
+# #   when: key_test.rc == 0
+
+# - name: Add GitHub to known_hosts
+#   ansible.builtin.known_hosts:
+#     name: github.com
+#     key: "{{ lookup('pipe', 'ssh-keyscan github.com') }}"
+#     path: /home/ubuntu/.ssh/known_hosts
+#     state: present
+#   become: true
+#   # become_user: ubuntu
+
+# - name: Set permissions for known_hosts
+#   ansible.builtin.file:
+#     path: /home/ubuntu/.ssh/known_hosts
+#     owner: ubuntu
+#     group: ubuntu
+#     mode: '0644'
+#   become: true
+
+# # - name: Test SSH connection to GitHub
+# #   ansible.builtin.command: ssh -i /home/ubuntu/.ssh/github_private_key -T git@github.com -o StrictHostKeyChecking=no
+# #   register: ssh_test
+# #   become: true
+# #   become_user: ubuntu
+# #   changed_when: false
+# #   failed_when: false
+
+# # - name: Debug SSH test result
+# #   debug:
+# #     msg: "SSH test output: {{ ssh_test.stdout }} | Error: {{ ssh_test.stderr }}"
+
+# # - name: Verify GitHub SSH authentication
+# #   fail:
+# #     msg: "Cannot connect to GitHub with SSH key. Error: {{ ssh_test.stderr }}"
+# #   when: 
+# #     - ssh_test.rc != 0 
+# #     - "'successfully authenticated' not in ssh_test.stderr"
+# #     - "'You've successfully authenticated' not in ssh_test.stderr"
+
+# - name: Remove all files in the web server root
+#   ansible.builtin.file:
+#     path: /var/www/html
+#     state: absent
+#   become: true
+
+# - name: Recreate web server root directory
+#   ansible.builtin.file:
+#     path: /var/www/html
+#     state: directory
+#     owner: ubuntu
+#     group: ubuntu
+#     mode: '0755'
+#   become: true
+
+# - name: Clone the git repository
+#   ansible.builtin.git:
+#     repo: "{{ github_repo }}"
+#     dest: "{{ clone_dest }}"
+#     version: main
+#     accept_hostkey: true
+#     update: yes
+#     force: yes
+#     key_file: /home/ubuntu/.ssh/github_private_key
+#   become: true
+#   # become_user: ubuntu
+
+# - name: Check if files were cloned successfully
+#   ansible.builtin.stat:
+#     path: "{{ clone_dest }}"
+#   register: clone_check
+
+# - name: Fail if clone directory is empty
+#   fail:
+#     msg: "Repository was not cloned successfully - {{ clone_dest }} is missing"
+#   when: not clone_check.stat.exists
+
+# - name: Move the files from the cloned repository to the web server root
+#   ansible.builtin.shell: |
+#     if [ "$(ls -A {{ clone_dest }})" ]; then
+#       cp -r {{ clone_dest }}/* /var/www/html/ 2>/dev/null || true
+#       cp -r {{ clone_dest }}/.[^.]* /var/www/html/ 2>/dev/null || true
+#     fi
+#   become: true
+
+# - name: Ensure the web root directory has the correct permissions
+#   ansible.builtin.file:
+#     path: /var/www/html
+#     state: directory
+#     recurse: yes
+#     owner: ubuntu
+#     group: ubuntu
+#     mode: '0755'
+#   become: true
+
+# - name: Clean up cloned repository directory
+#   ansible.builtin.file:
+#     path: "{{ clone_dest }}"
+#     state: absent
+#   become: true
+
+# - name: Remove GitHub private key after clone (optional)
+#   ansible.builtin.file:
+#     path: /home/ubuntu/.ssh/github_private_key
+#     state: absent
+#   become: true
+
+
+
+
+---
+# tasks file for git-repo
+
+- name: Ensure git and AWS CLI are installed
+  ansible.builtin.package:
+    name:
+      - git
+      - awscli
+    state: present
+  become: true
+
+- name: Ensure .ssh directory exists
+  ansible.builtin.file:
+    path: /home/ubuntu/.ssh
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0700'
+  become: true
+
+- name: Fetch SSH private key from AWS Secrets Manager and write to file
+  ansible.builtin.shell: |
+    aws secretsmanager get-secret-value \
+      --secret-id "{{ secret_name }}" \
+      --region "{{ secret_region }}" \
+      --query SecretString \
+      --output text > /home/ubuntu/.ssh/github_private_key
+  register: secret_output
+  no_log: true
+  become: true
+
+- name: Ensure SSH key has correct permissions
+  ansible.builtin.file:
+    path: /home/ubuntu/.ssh/github_private_key
+    owner: ubuntu
+    group: ubuntu
+    mode: '0600'
+  become: true
+
+- name: Ensure known_hosts file exists
+  ansible.builtin.file:
+    path: /home/ubuntu/.ssh/known_hosts
+    state: touch
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+  become: true
+
+- name: Add GitHub to known_hosts
+  ansible.builtin.known_hosts:
+    name: github.com
+    key: "{{ lookup('pipe', 'ssh-keyscan github.com') }}"
+    path: /home/ubuntu/.ssh/known_hosts
+    state: present
+  become: true
+
+- name: Remove all files in the web server root
+  ansible.builtin.file:
+    path: /var/www/html
+    state: absent
+  become: true
+
+- name: Recreate web server root directory
+  ansible.builtin.file:
+    path: /var/www/html
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+  become: true
+
+- name: Clone the git repository
+  ansible.builtin.git:
+    repo: "{{ github_repo }}"
+    dest: "{{ clone_dest }}"
+    version: main
+    accept_hostkey: true
+    update: yes
+    force: yes
+    key_file: /home/ubuntu/.ssh/github_private_key
+  become: true
+
+- name: Check if files were cloned successfully
+  ansible.builtin.stat:
+    path: "{{ clone_dest }}"
+  register: clone_check
+
+- name: Fail if clone directory is empty
+  fail:
+    msg: "Repository was not cloned successfully - {{ clone_dest }} is missing"
+  when: not clone_check.stat.exists
+
+- name: Move the files from the cloned repository to the web server root
+  ansible.builtin.shell: |
+    if [ "$(ls -A {{ clone_dest }})" ]; then
+      cp -r {{ clone_dest }}/* /var/www/html/ 2>/dev/null || true
+      cp -r {{ clone_dest }}/.[^.]* /var/www/html/ 2>/dev/null || true
+    fi
+  become: true
+
+- name: Ensure the web root directory has the correct permissions
+  ansible.builtin.file:
+    path: /var/www/html
+    state: directory
+    recurse: yes
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+  become: true
+
+- name: Clean up cloned repository directory
+  ansible.builtin.file:
+    path: "{{ clone_dest }}"
+    state: absent
+  become: true
+
+- name: Remove GitHub private key after clone
+  ansible.builtin.file:
+    path: /home/ubuntu/.ssh/github_private_key
+    state: absent
+  when: clone_check.stat.exists
+  become: true

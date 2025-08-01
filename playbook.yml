@@ -5,45 +5,50 @@
   connection: amazon.aws.aws_ssm
   gather_facts: yes
 
-  tasks:
-    - name: Install Nginx
-      become: true
-      apt:
-        name: nginx
-        state: present
-        update_cache: yes
+  roles:
+    - packages
+    - webserver
+    - git-repo
 
-    - name: Ensure Nginx is running
-      become: true
-      service:
-        name: nginx
-        state: started
-        enabled: yes
+  # tasks:
+  #   - name: Install Nginx
+  #     become: true
+  #     apt:
+  #       name: nginx
+  #       state: present
+  #       update_cache: yes
 
-    - name: Install Git
-      become: true
-      apt:
-        name: git
-        state: present
-        update_cache: yes
+  #   - name: Ensure Nginx is running
+  #     become: true
+  #     service:
+  #       name: nginx
+  #       state: started
+  #       enabled: yes
 
-    - name: Ensure target directory is clean
-      become: true
-      file:
-        path: /var/www/html
-        state: absent
+  #   - name: Install Git
+  #     become: true
+  #     apt:
+  #       name: git
+  #       state: present
+  #       update_cache: yes
 
-    - name: Recreate directory
-      become: true
-      file:
-        path: /var/www/html
-        state: directory
-        mode: '0755'
+  #   - name: Ensure target directory is clean
+  #     become: true
+  #     file:
+  #       path: /var/www/html
+  #       state: absent
 
-    - name: Clone Git repository
-      become: true
-      git:
-        repo: 'https://github.com/omokarogabriel/portfolio.git'
-        dest: /var/www/html
-        version: main
-        force: yes
+  #   - name: Recreate directory
+  #     become: true
+  #     file:
+  #       path: /var/www/html
+  #       state: directory
+  #       mode: '0755'
+
+  #   - name: Clone Git repository
+  #     become: true
+  #     git:
+  #       repo: 'https://github.com/omokarogabriel/portfolio.git'
+  #       dest: /var/www/html
+  #       version: main
+  #       force: yes

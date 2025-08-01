@@ -1,0 +1,8 @@
+---
+# tasks file for webserver
+- name: Ensure Nginx is running
+  ansible.builtin.service:
+    name: nginx
+    state: started
+    enabled: true
+  become: true  

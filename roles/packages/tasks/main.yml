@@ -1,0 +1,58 @@
+---
+# tasks file for packages
+
+# tasks file for packages
+# This role install the nessessary packages for the project.
+# Update the apt package manager and install git and apache2.
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: yes
+  become: true
+  # when: ansible_os_family == "Debian"
+
+
+- name: Install required packages
+  ansible.builtin.apt:
+    name:
+      - git
+      - nginx
+      
+    state: present
+  become: true
+  # when: ansible_os_family == "Debian"
+
+- name: Ensure Python 3 is installed
+  apt:
+    name: python3
+    state: present
+  become: true
+
+- name: Ensure pip3 is installed
+  apt:
+    name: python3-pip
+    state: present
+  become: true
+
+- name: Install boto3 and botocore on remote hosts
+  pip:
+    name:
+      - boto3
+      - botocore
+    executable: pip3
+  become: true
+
+
+# - name: Install boto3 and botocore on remote hosts
+#   ansible.builtin.pip:
+#     name:
+#       - boto3
+#       - botocore
+#     executable: pip3
+
+
+- name: Ensure pip3 is installed
+  apt:
+    name: python3-pip
+    state: present
+  become: true
+  # when: ansible_os_family == "Debian"
