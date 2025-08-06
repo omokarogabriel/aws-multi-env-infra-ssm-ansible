@@ -1,0 +1,95 @@
+# name: Ansible Deploy via SSM
+
+# on:
+#   workflow_dispatch: # run manually
+#   push:
+#     branches:
+#       - dev
+#       - staging
+#       - main
+
+# jobs:
+#   ansible:
+#     runs-on: ubuntu-latest
+
+#     env:
+#       AWS_REGION: us-east-1
+#       ANSIBLE_HOST_KEY_CHECKING: "False"
+#       ENV_DIR: ${{ github.ref_name == 'main' && 'prod' || github.ref_name == 'staging' && 'staging' || github.ref_name == 'dev' && 'dev' || 'dev' }}
+
+#     steps:
+#       - name: Checkout repository
+#         uses: actions/checkout@v4
+
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v4
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: ${{ env.AWS_REGION }}
+
+#       - name: Install Python & Ansible dependencies
+#         run: |
+#           sudo apt-get update
+#           sudo apt-get install -y python3 python3-pip
+#           pip3 install ansible boto3 botocore amazon.aws
+
+#       # Optional: Debug inventory output
+#       - name: Test dynamic inventory
+#         run: |
+#           ansible-inventory -i inventory/aws_ec2.yml --graph
+
+#       - name: Run Ansible Playbook
+#         run: |
+#           ansible-playbook -i ../../aws_ec2.aws_ec2.yml playbook.yml \
+#             --extra-vars "ansible_aws_ssm_bucket_name=ansible-s3-bucket-omokaro" \
+#             --extra-vars "ansible_aws_ssm_region_name=us-east-1" \
+#             --limit frontend-dev-asg-ec2 \
+#             --tags deploy,configure,install
+
+
+
+
+name: Ansible Deploy via SSM
+
+on:
+  repository_dispatch:
+    types: [run-ansible]
+
+jobs:
+  ansible:
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: us-east-1
+      ANSIBLE_HOST_KEY_CHECKING: "False"
+      ENV_NAME: ${{ github.event.client_payload.env_name }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install Python & Ansible dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3 python3-pip
+          pip3 install ansible boto3 botocore amazon.aws
+
+      - name: Test dynamic inventory
+        run: |
+          ansible-inventory -i inventory/aws_ec2.yml --graph
+
+      - name: Run Ansible Playbook
+        run: |
+          ansible-playbook -i inventory/aws_ec2.yml playbook.yml \
+            --extra-vars "ansible_aws_ssm_bucket_name=ansible-s3-bucket-omokaro" \
+            --extra-vars "ansible_aws_ssm_region_name=us-east-1" \
+            --limit frontend-${{ env.ENV_NAME }}-asg-ec2 \
+            --tags deploy,configure,install

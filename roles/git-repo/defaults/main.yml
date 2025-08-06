@@ -11,5 +11,5 @@
 
 github_repo: "git@github.com:omokarogabriel/my-port-folio.git"
 clone_dest: "/var/www/html/my-port-folio"
-secret_name: "my-github_ssh_private_keys6"
+secret_name: "my-github_ssh_private_keys9"
 secret_region: "us-east-1"
